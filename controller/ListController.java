@@ -3,28 +3,36 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.ServletException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.io.IOException;
 import java.util.List;
 
 @WebServlet("/tasks/*")
 public class ListController extends HttpServlet {
+  private final TaskService taskService = new TaskService();
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   
   @Override //overrides the do post of httpservlet doPost is auto called whenever http post hits tasks, req is the http obj and resp the http response
-  protected void doPost(HttpServletRequest req,
-                        HttpServletResponse resp)
-            throws IOException {
-    
-    String task = req.getParameter("task"); //retrives form parameters named task from the post bassically @RequestParam("task") in spring
-    
-    taskService.addTask(task); //calls service layer to auto save or process task
-    
-    resp.setStatus(HttpServletResponse.SC_CREATED);//sets http status to 201
-    resp.getWriter().write("Task added") 
-    
-  }
+  protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+        throws IOException {
+
+    String name = req.getParameter("task"); // form param
+    if (name == null || name.isEmpty()) {
+        resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Task name is missing");
+        return;
+    }
+
+    Task newTask = new Task();
+    newTask.setName(name);
+
+    taskService.addTask(newTask);
+
+    resp.setStatus(HttpServletResponse.SC_CREATED);
+    resp.getWriter().write("Task added");
+}
   
   @Override
   protected void doDelete(HttpServletRequest req,
